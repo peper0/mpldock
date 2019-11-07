@@ -1,0 +1,14 @@
+- FigureManagerQTDock: FIXMES
+- scroll does not work with multiple axes
+- persistence id should be decoupled from window?
+- don't log an error if file not found
+- copy state reading from newer sdupy
+- save state of all axes in the figure
+- readme: example
+- readme: screenshots
+- readme: usage examples with: pure python, ipython console, jupyter
+- automatic detection of running mainloop
+- add pyqtgraph backend
+- publish on pip (test setup.py, etc.)
+- support qt4, pyside
+- codacy, codecov?, travis?
