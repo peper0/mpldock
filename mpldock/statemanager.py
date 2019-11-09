@@ -110,8 +110,13 @@ class StateManager:
     def has_factory_default(self, check_writtable=False):
         if not self._factory_default_path:
             return False
-        if check_writtable and not os.access(self._factory_default_path, os.W_OK):
-            return False
+        if check_writtable:
+            if os.path.exists(self._factory_default_path):
+                if not os.access(self._factory_default_path, os.W_OK):
+                    return False
+            else:
+                if not os.access(os.path.dirname(self._factory_default_path), os.W_OK):
+                    return False
         return True
 
     def has_last(self):

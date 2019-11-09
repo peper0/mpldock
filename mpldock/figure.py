@@ -11,6 +11,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationTool
 from matplotlib.figure import Figure
 
 from mpldock.common import DumpedState
+from mpldock.tweaks import tweak_axes
 
 FigureCanvas = FigureCanvasQTAgg
 
@@ -118,6 +119,7 @@ class MplFigure(QWidget):
                 self.restored_axes.add(ax)
                 if i < len(self.axes_state_to_restore):
                     self.restore_axes_state(ax, self.axes_state_to_restore[i])
+                tweak_axes(ax)
         self._tight_layout()
 
     @staticmethod
