@@ -137,7 +137,7 @@ class MplFigure(QWidget):
             y_axis=self.dump_axis_state(self.axes.get_yaxis()),
         )
 
-    def load_state(self, state: dict):
+    def restore_state(self, state: dict):
         if 'xlim' in state:
             self.axes.set_xlim(state['xlim'])
         if 'ylim' in state:

@@ -23,11 +23,11 @@ combo = QComboBox()
 combo.addItems(['oranges', 'apples'])
 
 
-add_dock(named(combo, name='fruits', title='fruits selector'), save_state=save_state_combo, load_state=load_state_combo)
+add_dock(named(combo, name='fruits', title='fruits selector'), dump_state=save_state_combo, restore_state=load_state_combo)
 
 combo2 = QComboBox()
 combo2.addItems(['a', 'b', 'c'])
 combo2.setObjectName('letters')
-add_dock(combo2, save_state=save_state_combo, load_state=load_state_combo)
+add_dock(combo2, dump_state=save_state_combo, restore_state=load_state_combo)
 
 run()

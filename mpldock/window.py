@@ -3,13 +3,16 @@ import logging
 import signal
 from dataclasses import dataclass
 from os import path
-from typing import Callable, Dict
+from typing import Callable, Dict, Optional
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QCloseEvent
-from PyQt5.QtWidgets import QComboBox, QDockWidget, QMainWindow, QMenu, QWidget, QApplication
+from PyQt5.QtWidgets import QApplication, QDockWidget, QMainWindow, QMenu, QWidget
 
+from mpldock.common import DumpStateFunction, RestoreStateFunction
+from .common import DumpedState
 from .common import named
+from .statemanager import StateManager
 
 logging.basicConfig(level=logging.INFO)
 
@@ -20,27 +23,41 @@ class WidgetInfo:
     name: str  # used to programatically identify widget instance (in configs, in function calls)
     title: str
     dock_widget: QDockWidget
-    save_state: Callable = lambda o: dict()
-    load_state: Callable = lambda o, s: None
+    dump_state: DumpStateFunction = lambda: dict()
+    restore_state: RestoreStateFunction = lambda s: None
     remove_action = None
 
 
 class Window(QMainWindow):
-    def __init__(self, parent=None, widget_title=None, global_id=None):
+    def __init__(self, parent, title, name, state_manager: StateManager):
+        """
+        :param parent:
+        :param title: any descriptive string
+        :param name: a string that identifies this window (unique)
+        :param state_manager:
+        """
         super().__init__(parent)
         # self.setCentralWidget(QTextEdit())
         # noinspection PyTypeChecker
-        self.global_id = global_id
+        self.name = name
+        self.state_manager = state_manager
         self.setCentralWidget(None)
         self.setDockNestingEnabled(True)
-        self.setWindowTitle(widget_title)
+        self.setWindowTitle(title)
 
         self.widgets = {}  # type: Dict[str, WidgetInfo]
 
         self.file_menu = QMenu('&File', self)
-        self.save_layout_action = self.file_menu.addAction('&Save layout', self.save_state_to_file, Qt.CTRL + Qt.Key_S)
-        self.save_layout_action.setEnabled(bool(self.global_id))
         self.menuBar().addMenu(self.file_menu)
+
+        self.layout_menu = QMenu('&Layout', self)
+        self.menuBar().addMenu(self.layout_menu)
+        self.save_layout_action = self.layout_menu.addAction('&Save', state_manager.save_as_last, Qt.CTRL + Qt.Key_S)
+        self.save_layout_action.setEnabled(state_manager.has_last())
+        self.save_layout_def_action = self.layout_menu.addAction('Save as &default',
+                                                               state_manager.save_as_default)
+        self.save_layout_def_action.setEnabled(state_manager.has_factory_default())
+
 
         # self.add_menu = QMenu('&Add widget', self)
         # self.menuBar().addSeparator()
@@ -53,25 +70,12 @@ class Window(QMainWindow):
 
         self.resize(400, 400)  # workaround some bugs
 
-        self.widgets_state = dict()
+        self.loaded_widgets_state = dict()
 
-        file_name = "{}.state.json".format(self.global_id)
-        if path.exists(file_name):
-            try:
-                with open(file_name) as f:
-                    loaded_state = json.load(f)
-                    self.loaded_state = loaded_state
-                    self.widgets_state = loaded_state['widgets']
-
-                    for widget_name, (widget_title, state) in self.widgets_state.items():
-                        print(f"adding {widget_name} {widget_title}")
-                        # widget.show()
-                        self.add(named(QWidget(), widget_name, widget_title))
-
-                    self.restoreGeometry(bytes.fromhex(loaded_state['geometry']))
-                    self.restoreState(bytes.fromhex(loaded_state['state']))
-            except Exception:
-                logging.exception("exception during reading state file; ignoring")
+        self.state_manager.add_client(self.name, self.dump_state, self.restore_state)
+        loaded_state = self.state_manager.get_client_state(self.name)
+        if loaded_state is not None:
+            self.restore_state(loaded_state)
 
     def remove_widget(self, widget_name):
         wi = self.widgets[widget_name]
@@ -82,22 +86,15 @@ class Window(QMainWindow):
         del self.widgets[widget_name]
 
     def closeEvent(self, a0: QCloseEvent):
-        self.save_state_to_file()
+        self.state_manager.save_as_last()
         if self.close_callback:
             self.close_callback()
-
-    def save_state_to_file(self):
-        if self.global_id:
-            state_as_json = json.dumps(
-                self.dump_state())  # we do it before overwritting a file since there may be error
-            with open("{}.state.json".format(self.global_id), 'w') as f:
-                f.write(state_as_json)
 
     def dump_state(self):
         widgets_state = {}
         for i in self.widgets.values():
             try:
-                widgets_state[i.name] = i.title, i.save_state(i.widget)
+                widgets_state[i.name] = i.title, i.dump_state()
             except Exception:
                 logging.exception("ignoring exception during serialization of {}".format(i.dock_widget.windowTitle()))
 
@@ -107,12 +104,27 @@ class Window(QMainWindow):
             widgets=widgets_state
         )
 
-    def load_state(self, state: dict):
-        pass
+    def restore_state(self, window_state: DumpedState):
+        try:
+            self.loaded_state = window_state
+            self.loaded_widgets_state = window_state['widgets']
 
+            for widget_name, (widget_title, widget_state) in self.loaded_widgets_state.items():
+                if widget_name not in self.widgets:
+                    print(f"adding {widget_name} {widget_title}")
+                    # widget.show()
+                    self.add(named(QWidget(), widget_name, widget_title))
+                else:
+                    self.widgets[widget_name].restore_state(widget_state)
+
+            self.restoreGeometry(bytes.fromhex(window_state['geometry']))
+            self.restoreState(bytes.fromhex(window_state['state']))
+        except Exception:
+            logging.exception("exception during reading state file; ignoring")
 
     # FIXME: refactor: add, remove, replace
-    def add(self, widget: QWidget, save_state: Callable = lambda a: dict(), load_state: Callable = lambda a, b: None):
+    def add(self, widget: QWidget, dump_state: DumpStateFunction = lambda: dict(),
+            restore_state: RestoreStateFunction = lambda b: None):
         name = widget.objectName()
         assert name
         title = widget.windowTitle() or name
@@ -134,7 +146,7 @@ class Window(QMainWindow):
 
         widget.setParent(dock_widget)
         wi = WidgetInfo(widget=widget, name=name, title=title, dock_widget=dock_widget,
-                        save_state=save_state, load_state=load_state)
+                        dump_state=dump_state, restore_state=restore_state)
         self.widgets[name] = wi
 
         def remove_widget():
@@ -155,15 +167,14 @@ class Window(QMainWindow):
 
         widget.objectNameChanged.connect(forbid_name_change)
 
-
         self.restore(widget)
 
     def restore(self, widget: QWidget):
         name = widget.objectName()
-        state = self.widgets_state.get(name)
+        state = self.loaded_widgets_state.get(name)
         widget_instance = self.widgets[name]
         if state is not None:
-            widget_instance.load_state(widget, state)
+            widget_instance.restore_state(state)
 
     def run(self):
         signal.signal(signal.SIGINT, signal.SIG_DFL)

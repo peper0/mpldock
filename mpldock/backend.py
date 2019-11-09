@@ -15,7 +15,7 @@ class FigureManagerQTDock(FigureManagerBase):
         self.name = f"MplFigure__{num}"
         widget.setObjectName(self.name)
         self.window = window()
-        add_dock(widget, save_state=MplFigure.dump_state, load_state=MplFigure.load_state)
+        add_dock(widget, dump_state=widget.dump_state, restore_state=widget.restore_state)
         self.widget = widget
 
     def destroy(self, *args):

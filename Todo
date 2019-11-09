@@ -1,8 +1,9 @@
-- FigureManagerQTDock: FIXMES
+- nie działa zapisywanie stanu wewn figur
+- test combo boxów
+- przykład za napis stanu domyślnego (i ogólnie taki bardziej wypasiony przykład)
 - scroll does not work with multiple axes
 - persistence id should be decoupled from window?
 - don't log an error if file not found
-- copy state reading from newer sdupy
 - save state of all axes in the figure
 - readme: example
 - readme: screenshots
