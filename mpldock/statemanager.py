@@ -53,7 +53,10 @@ class StateManager:
         encode = encoders.get(ext)
         if not encode:
             raise Exception(f"unknown format: {ext}")
-        encoded = encode(self._dump_state())
+
+        state = self._dump_state()
+
+        encoded = encode(state)
         # we encode before opening a file to be safe if exception is raised during encoding
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, 'w') as f:
@@ -104,8 +107,12 @@ class StateManager:
         if self._id:
             self.restore_from_system(self._id)
 
-    def has_factory_default(self):
-        return self._factory_default_path is not None
+    def has_factory_default(self, check_writtable=False):
+        if not self._factory_default_path:
+            return False
+        if check_writtable and not os.access(self._factory_default_path, os.W_OK):
+            return False
+        return True
 
     def has_last(self):
         return self._id is not None
@@ -113,3 +120,6 @@ class StateManager:
     def save_as_default(self):
         if self._factory_default_path:
             self.save_to_file(self._factory_default_path)
+
+    def restore_default(self):
+        self.restore_from_file(self._factory_default_path)

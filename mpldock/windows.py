@@ -1,4 +1,5 @@
-from typing import Callable, Union
+import os
+from typing import Union
 
 from PyQt5.QtWidgets import QApplication, QWidget
 
@@ -101,7 +102,8 @@ def persist_layout(id: str, factory_default_path=None, load_now=True):
     """
     Call this function before creating any other window to restore the layout on each run.
     :param id: Any string that is unique to the application.
-    :param factory_default_path: A path to a file that stores factory default settings.
+    :param factory_default_path: A path to a file that stores factory default settings. Usually, it is a file that you
+     want to ship along with your application. It is used if there is no locally saved layout.
     :param load_now: Load state immediately.
     :return:
     """
@@ -110,5 +112,5 @@ def persist_layout(id: str, factory_default_path=None, load_now=True):
     state_manager = StateManager(id, factory_default_path)
     if id and load_now:
         success = state_manager.restore_from_system(id)
-        if not success and factory_default_path:
-            state_manager.restore_from_file(factory_default_path)
+        if not success and factory_default_path and os.path.exists(factory_default_path):
+            state_manager.restore_default()

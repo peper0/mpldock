@@ -1,17 +1,15 @@
-import json
+import logging
 import logging
 import signal
 from dataclasses import dataclass
-from os import path
-from typing import Callable, Dict, Optional
+from typing import Dict
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QCloseEvent
 from PyQt5.QtWidgets import QApplication, QDockWidget, QMainWindow, QMenu, QWidget
 
 from mpldock.common import DumpStateFunction, RestoreStateFunction
-from .common import DumpedState
-from .common import named
+from .common import DumpedState, named
 from .statemanager import StateManager
 
 logging.basicConfig(level=logging.INFO)
@@ -54,10 +52,20 @@ class Window(QMainWindow):
         self.menuBar().addMenu(self.layout_menu)
         self.save_layout_action = self.layout_menu.addAction('&Save', state_manager.save_as_last, Qt.CTRL + Qt.Key_S)
         self.save_layout_action.setEnabled(state_manager.has_last())
-        self.save_layout_def_action = self.layout_menu.addAction('Save as &default',
-                                                               state_manager.save_as_default)
-        self.save_layout_def_action.setEnabled(state_manager.has_factory_default())
 
+        self.restore_layout_action = self.layout_menu.addAction('Restore &last', state_manager.restore_last)
+        self.restore_layout_action.setEnabled(state_manager.has_last())
+
+        self.restore_layout_def_action = None
+        self.save_layout_def_action = None
+
+        if state_manager.has_factory_default():
+            self.restore_layout_def_action = self.layout_menu.addAction('Restore &default',
+                                                                        state_manager.restore_default)
+
+        if state_manager.has_factory_default(check_writtable=True):
+            self.save_layout_def_action = self.layout_menu.addAction('Save as default',
+                                                                     state_manager.save_as_default)
 
         # self.add_menu = QMenu('&Add widget', self)
         # self.menuBar().addSeparator()
@@ -111,7 +119,6 @@ class Window(QMainWindow):
 
             for widget_name, (widget_title, widget_state) in self.loaded_widgets_state.items():
                 if widget_name not in self.widgets:
-                    print(f"adding {widget_name} {widget_title}")
                     # widget.show()
                     self.add(named(QWidget(), widget_name, widget_title))
                 else:
@@ -155,7 +162,6 @@ class Window(QMainWindow):
         wi.remove_action = self.remove_menu.addAction(title, remove_widget)
 
         def title_changed(new_title):
-            print(f"title changed to {new_title}")
             dock_widget.setWindowTitle(new_title)
             wi.title = new_title
             wi.remove_action.setText(new_title)
@@ -171,10 +177,13 @@ class Window(QMainWindow):
 
     def restore(self, widget: QWidget):
         name = widget.objectName()
-        state = self.loaded_widgets_state.get(name)
-        widget_instance = self.widgets[name]
-        if state is not None:
-            widget_instance.restore_state(state)
+        try:
+            title, state = self.loaded_widgets_state.get(name, (None, None))
+            widget_instance = self.widgets[name]
+            if state is not None:
+                widget_instance.restore_state(state)
+        except Exception as e:
+            logging.exception(f"exception during restoring state of '{name}")
 
     def run(self):
         signal.signal(signal.SIGINT, signal.SIG_DFL)

@@ -1,15 +1,9 @@
-- nie działa zapisywanie stanu wewn figur
-- test combo boxów
-- przykład za napis stanu domyślnego (i ogólnie taki bardziej wypasiony przykład)
-- scroll does not work with multiple axes
-- persistence id should be decoupled from window?
-- don't log an error if file not found
-- save state of all axes in the figure
 - readme: example
 - readme: screenshots
 - readme: usage examples with: pure python, ipython console, jupyter
 - automatic detection of running mainloop
 - add pyqtgraph backend
+- remove widget, then restore state -> two identical widgets
 - publish on pip (test setup.py, etc.)
 - support qt4, pyside
 - codacy, codecov?, travis?

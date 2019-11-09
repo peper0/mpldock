@@ -1,8 +1,12 @@
+import os
+from functools import partial
 from typing import Dict
 
-from PyQt5.QtWidgets import QComboBox, QApplication
+from PyQt5.QtWidgets import QApplication, QComboBox
 
-from mpldock import window, add_dock, named, run
+from mpldock import add_dock, named, persist_layout, run
+
+persist_layout('7ec682b5-4408-42a6-ae97-3c11332a96f6', os.path.realpath(__file__))
 
 
 def save_state_combo(o: QComboBox) -> Dict:
@@ -16,18 +20,19 @@ def load_state_combo(o: QComboBox, state: Dict):
         o.setCurrentText(state['current_text'])
 
 
-window("combo state restore", '7ec682b5-4408-42a6-ae97-3c11332a96f6')
-
+qapp = QApplication([])
 
 combo = QComboBox()
 combo.addItems(['oranges', 'apples'])
 
-
-add_dock(named(combo, name='fruits', title='fruits selector'), dump_state=save_state_combo, restore_state=load_state_combo)
+add_dock(named(combo, name='fruits', title='fruits selector'),
+         dump_state=partial(save_state_combo, combo),
+         restore_state=partial(load_state_combo, combo))
 
 combo2 = QComboBox()
 combo2.addItems(['a', 'b', 'c'])
-combo2.setObjectName('letters')
-add_dock(combo2, dump_state=save_state_combo, restore_state=load_state_combo)
+add_dock(named(combo2, name='letters'),
+         dump_state=partial(save_state_combo, combo2),
+         restore_state=partial(load_state_combo, combo2))
 
 run()

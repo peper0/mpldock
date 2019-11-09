@@ -4,13 +4,17 @@ from math import exp, log
 from PyQt5 import QtGui
 from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtWidgets import QVBoxLayout, QWidget
+from matplotlib.axes import Axes
 from matplotlib.axis import Axis
 from matplotlib.backend_bases import MouseEvent, key_press_handler
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT as NavigationToolbar
+from matplotlib.figure import Figure
+
+from mpldock.common import DumpedState
 
 FigureCanvas = FigureCanvasQTAgg
 
-MODIFIER_KEYS = set(['shift', 'control', 'alt'])
+MODIFIER_KEYS = {'shift', 'control', 'alt'}
 
 
 class MplFigure(QWidget):
@@ -25,7 +29,7 @@ class MplFigure(QWidget):
         self.canvas.setFocus()
         self.layout.addWidget(self.canvas)
 
-        self.figure = canvas.figure
+        self.figure = canvas.figure  # type: Figure
 
         self.mpl_toolbar = NavigationToolbar(self.canvas, self)
         self.layout.addWidget(self.mpl_toolbar)
@@ -47,11 +51,10 @@ class MplFigure(QWidget):
         self.mpl_toolbar.pan()  # we usually want to pan with mouse, since zooming is on the scroll
 
         self.current_modifiers = set()
+        self.restored_axes = set()
 
-        self.axes = self.figure.add_subplot(111)
-        self.axes.set_adjustable('datalim')  # use whole area when keeping aspect ratio of images
-        self.resizeEvent(None)
-
+        self.axes_state_to_restore = []
+        self.figure.add_axobserver(lambda figure: self._restore_existing_axes())
         self.setMinimumSize(200, 200)
 
     @property
@@ -81,7 +84,7 @@ class MplFigure(QWidget):
             logging.error("cannot zoom on '{}' scale".format(mode))
 
     def on_scroll(self, event: MouseEvent):
-        ax = self.axes
+        ax = event.inaxes
 
         SCALE_PER_TICK = 1.3
         if event.button == 'up':
@@ -104,7 +107,18 @@ class MplFigure(QWidget):
         self.canvas.draw_idle()
 
     def resizeEvent(self, a0: QtGui.QResizeEvent):
+        self._tight_layout()
+
+    def _tight_layout(self):
         self.figure.tight_layout(pad=0.5)
+
+    def _restore_existing_axes(self):
+        for i, ax in enumerate(self.figure.axes):
+            if ax not in self.restored_axes:
+                self.restored_axes.add(ax)
+                if i < len(self.axes_state_to_restore):
+                    self.restore_axes_state(ax, self.axes_state_to_restore[i])
+        self._tight_layout()
 
     @staticmethod
     def dump_axis_state(axis: Axis):
@@ -121,32 +135,43 @@ class MplFigure(QWidget):
         return state
 
     @staticmethod
-    def load_axis_state(axis: Axis, state: dict):
+    def restore_axis_state(axis: Axis, state: dict):
         if state['grid']:
             axis.grid(True, **state['grid'])
         else:
             axis.grid(False)
 
-    def dump_state(self):
+    @staticmethod
+    def dump_axes_state(axes: Axes) -> DumpedState:
         return dict(
-            xlim=self.axes.get_xlim(),
-            ylim=self.axes.get_ylim(),
-            xscale=self.axes.get_xscale(),
-            yscale=self.axes.get_yscale(),
-            x_axis=self.dump_axis_state(self.axes.get_xaxis()),
-            y_axis=self.dump_axis_state(self.axes.get_yaxis()),
+            xlim=axes.get_xlim(),
+            ylim=axes.get_ylim(),
+            xscale=axes.get_xscale(),
+            yscale=axes.get_yscale(),
+            x_axis=MplFigure.dump_axis_state(axes.get_xaxis()),
+            y_axis=MplFigure.dump_axis_state(axes.get_yaxis()),
         )
 
-    def restore_state(self, state: dict):
+    @staticmethod
+    def restore_axes_state(axes, state: DumpedState):
         if 'xlim' in state:
-            self.axes.set_xlim(state['xlim'])
+            axes.set_xlim(state['xlim'])
         if 'ylim' in state:
-            self.axes.set_ylim(state['ylim'])
+            axes.set_ylim(state['ylim'])
         if 'xscale' in state:
-            self.axes.set_xscale(state['xscale'])
+            axes.set_xscale(state['xscale'])
         if 'yscale' in state:
-            self.axes.set_yscale(state['yscale'])
+            axes.set_yscale(state['yscale'])
         if 'x_axis' in state:
-            self.load_axis_state(self.axes.get_xaxis(), state['x_axis'])
+            MplFigure.restore_axis_state(axes.get_xaxis(), state['x_axis'])
         if 'y_axis' in state:
-            self.load_axis_state(self.axes.get_yaxis(), state['y_axis'])
+            MplFigure.restore_axis_state(axes.get_yaxis(), state['y_axis'])
+
+    def dump_state(self):
+        return dict(
+            axes=[self.dump_axes_state(axes) for axes in self.figure.axes]
+        )
+
+    def restore_state(self, state: DumpedState):
+        self.axes_state_to_restore = state['axes']
+        self._restore_existing_axes()
