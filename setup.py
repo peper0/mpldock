@@ -3,7 +3,7 @@
 from setuptools import setup
 
 
-with open("README.rst") as fh:
+with open("README.md") as fh:
     long_description = fh.read()
 
 setup(
@@ -17,18 +17,18 @@ setup(
     author='Tomasz Łakota',
     author_email='tomasz.lakota@gmail.com',
     install_requires=[
-        'qt5',
+        'PyQt5',
         'matplotlib',
-        'docutils',
+        'appdirs',
     ],
     tests_require=[
     ],
     extras_require={
         'pyqtgraph': ['pyqtgraph'],
     },
-    packages=('mpldock'),
+    packages=('mpldock',),
     keywords=[
-        'matplotlib', 'qt5', 'backend', 'dock', 'docking', 'dockable', 'layout',
+        'matplotlib', 'qt5', 'backend', 'dock', 'docking', 'dockable', 'layout'
         ],
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
@@ -41,5 +41,5 @@ setup(
         "Topic :: Software Development",
         "Topic :: Software Development :: Libraries :: Python Modules",
         ],
-    python_requires='>=3.6'
+    python_requires='>=3.7'
 )

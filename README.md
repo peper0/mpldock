@@ -2,9 +2,9 @@
 A matplotlib backend that makes figures dockable.
 
 # Motivation
-Work with this:
+Work with something like this:
 ![docked layout](assets/docked.png)
-instead of this:
+instead of that:
 ![windowed layout](assets/windows.png)
 
 # Features
@@ -19,7 +19,23 @@ instead of this:
 pip install qtdock
 ```
 # Usage
-See also [examples](examples).
+## Example
+The simplest example with layout persistence:
+```python
+import matplotlib.pyplot as plt
+from mpldock import persist_layout
+
+plt.switch_backend('module://mpldock.backend')
+persist_layout('1e2682b5-4408-42a6-ae97-3c11332a96fa')
+
+plt.figure("some plot")
+plt.plot([1, 5, 3])
+plt.figure("another plot")
+plt.plot([5, 0, 1])
+
+plt.show()
+
+``` 
 ## Set a backend
 Set a matplotlib backend to `module://mpldock.backend`. See [this](https://matplotlib.org/faq/usage_faq.html?highlight=backend#what-is-a-backend) for more.
 
@@ -59,23 +75,8 @@ persist_layout('my_super_unique_identifier')
 The layout is saved after closing a window or when done manually from a menu (`Layout`/`Save`). The string identifier
  should be different for each application (scripts with the same identifier share the layout).
 
-## Example
-The simplest example with state persistence:
-```python
-import matplotlib.pyplot as plt
-from mpldock import persist_layout
-
-plt.switch_backend('module://mpldock.backend')
-persist_layout('1e2682b5-4408-42a6-ae97-3c11332a96fa')
-
-plt.figure("some plot")
-plt.plot([1, 5, 3])
-plt.figure("another plot")
-plt.plot([5, 0, 1])
-
-plt.show()
-
-``` 
+## More
+See [examples](examples) for more.
 
 # Major dependencies
 * Python >= 3.7 (3.6 coming soon)

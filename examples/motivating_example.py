@@ -5,7 +5,7 @@ import os.path
 
 from mpldock import persist_layout, window
 
-USE_MPLDOCK = False
+USE_MPLDOCK = True
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
 

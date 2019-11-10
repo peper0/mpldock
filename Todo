@@ -5,6 +5,7 @@
 - add pyqtgraph backend
 - remove widget, then restore state -> two identical widgets
 - make tweaks optional
+- resize assets (down by 2?)
 - publish on pip (test setup.py, etc.)
 - support qt4, pyside
 - support python 3.6, maybe even 3.5
