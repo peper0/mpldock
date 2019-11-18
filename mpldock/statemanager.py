@@ -1,8 +1,7 @@
 import json
 import logging
 import os
-from dataclasses import dataclass
-from typing import Dict
+from typing import Dict, NamedTuple
 
 import appdirs
 
@@ -19,8 +18,7 @@ decoders = dict(
 )
 
 
-@dataclass
-class Client:
+class Client(NamedTuple):
     dump_state: DumpStateFunction
     restore_state: RestoreStateFunction
 

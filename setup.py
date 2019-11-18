@@ -8,7 +8,7 @@ with open("README.md") as fh:
 
 setup(
     name='mpldock',
-    version='0.0.1',
+    version='0.0.2',
     description='Dock matplotlib figures and other widgets.',
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -41,5 +41,5 @@ setup(
         "Topic :: Software Development",
         "Topic :: Software Development :: Libraries :: Python Modules",
         ],
-    python_requires='>=3.7'
+    python_requires='>=3.6'
 )

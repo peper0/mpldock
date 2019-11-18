@@ -1,8 +1,7 @@
 import logging
 import logging
 import signal
-from dataclasses import dataclass
-from typing import Dict
+from typing import Dict, NamedTuple, Callable
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QCloseEvent
@@ -15,15 +14,15 @@ from .statemanager import StateManager
 logging.basicConfig(level=logging.INFO)
 
 
-@dataclass
-class WidgetInfo:
+
+class WidgetInfo(NamedTuple):
     widget: QWidget
     name: str  # used to programatically identify widget instance (in configs, in function calls)
     title: str
     dock_widget: QDockWidget
     dump_state: DumpStateFunction = lambda: dict()
     restore_state: RestoreStateFunction = lambda s: None
-    remove_action = None
+    remove_action: Callable = None
 
 
 class Window(QMainWindow):
@@ -152,19 +151,19 @@ class Window(QMainWindow):
             self.remove_menu.removeAction(widget_instance.remove_action)
 
         widget.setParent(dock_widget)
-        wi = WidgetInfo(widget=widget, name=name, title=title, dock_widget=dock_widget,
-                        dump_state=dump_state, restore_state=restore_state)
-        self.widgets[name] = wi
 
         def remove_widget():
             self.remove_widget(name)
 
-        wi.remove_action = self.remove_menu.addAction(title, remove_widget)
+        wi = WidgetInfo(widget=widget, name=name, title=title, dock_widget=dock_widget,
+                        dump_state=dump_state, restore_state=restore_state,
+                        remove_action=self.remove_menu.addAction(title, remove_widget))
+        self.widgets[name] = wi
 
         def title_changed(new_title):
             dock_widget.setWindowTitle(new_title)
-            wi.title = new_title
             wi.remove_action.setText(new_title)
+            self.widgets[name] = wi._replace(title=new_title)
 
         widget.windowTitleChanged.connect(title_changed)
 
