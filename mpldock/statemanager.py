@@ -54,7 +54,11 @@ class StateManager:
 
         state = self._dump_state()
 
-        encoded = encode(state)
+        try:
+            encoded = encode(state)
+        except Exception:
+            logging.exception("Exception during endoding state")
+
         # we encode before opening a file to be safe if exception is raised during encoding
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, 'w') as f:

@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import QApplication, QComboBox
 
 from mpldock import add_dock, named, persist_layout, run
 
-persist_layout('7ec682b5-4408-42a6-ae97-3c11332a96f6', os.path.realpath(__file__))
+persist_layout('7ec682b5-4408-42a6-ae97-3c11332a96f6')
 
 
 def save_state_combo(o: QComboBox) -> Dict:

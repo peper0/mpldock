@@ -16,7 +16,7 @@ instead of that:
 
 # Installation
 ```
-pip install qtdock
+pip install mpldock
 ```
 # Usage
 ## Example
