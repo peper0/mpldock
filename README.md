@@ -79,6 +79,6 @@ The layout is saved after closing a window or when done manually from a menu (`L
 See [examples](examples) for more.
 
 # Major dependencies
-* Python >= 3.7 (3.6 coming soon)
+* Python >= 3.6
 * PyQt5 (PySide, PyQt4 coming soon)
 * Matplotlib
