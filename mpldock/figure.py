@@ -126,8 +126,8 @@ class MplFigure(QWidget):
     def dump_axis_state(axis: Axis):
         state = dict()
         if axis.minorTicks and axis.minorTicks:
-            major = axis.majorTicks[0].gridOn
-            minor = axis.minorTicks[0].gridOn
+            major = axis.majorTicks[0].gridline.get_visible()
+            minor = axis.minorTicks[0].gridline.get_visible()
             if major or minor:
                 state['grid'] = dict(
                     which='both' if major and minor else 'major' if major else 'minor'

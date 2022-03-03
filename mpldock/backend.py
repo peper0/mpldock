@@ -10,13 +10,12 @@ from mpldock.figure import FigureCanvas, MplFigure
 
 class FigureManagerQTDock(FigureManagerBase):
     def __init__(self, canvas: FigureCanvas, num):
-        super().__init__(canvas=canvas, num=num)
-        widget = MplFigure(canvas)
+        self.widget = MplFigure(canvas)
         self.name = f"MplFigure__{num}"
-        widget.setObjectName(self.name)
+        self.widget.setObjectName(self.name)
         self.window = window()
-        add_dock(widget, dump_state=widget.dump_state, restore_state=widget.restore_state)
-        self.widget = widget
+        super().__init__(canvas=canvas, num=num)
+        add_dock(self.widget, dump_state=self.widget.dump_state, restore_state=self.widget.restore_state)
 
     def destroy(self, *args):
         # Not sure what should we do here
