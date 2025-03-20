@@ -37,19 +37,19 @@ plt.show()
 
 ``` 
 ## Set a backend
-Set a matplotlib backend to `module://mpldock.backend`. See [this](https://matplotlib.org/faq/usage_faq.html?highlight=backend#what-is-a-backend) for more.
+Set a matplotlib backend to `module://mpldock`. See [this](https://matplotlib.org/faq/usage_faq.html?highlight=backend#what-is-a-backend) for more.
 
 E.g.:
 ```python
 import matplotlib
-matplotlib.use('module://mpldock.backend')  # must be done before importing pyplot
 import matplotlib.pyplot as plt
+matplotlib.use('module://mpldock')
 ```
 
-Or (does not work with jupyter):
+Or 
 ```python
 import matplotlib.pyplot as plt
-plt.switch_backend('module://mpldock.backend')
+plt.switch_backend('module://mpldock')
 ```
 
 Also using a global configuration (like `matplotlibrc` file or `MPLBACKEND` environment variable) works but not in jupyter or pycharm console, since they hack around many things.
