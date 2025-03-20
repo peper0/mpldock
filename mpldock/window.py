@@ -1,5 +1,4 @@
 import logging
-import logging
 import signal
 from typing import Dict, NamedTuple, Callable
 
@@ -10,9 +9,6 @@ from PyQt5.QtWidgets import QApplication, QDockWidget, QMainWindow, QMenu, QWidg
 from mpldock.common import DumpStateFunction, RestoreStateFunction
 from .common import DumpedState, named
 from .statemanager import StateManager
-
-logging.basicConfig(level=logging.INFO)
-
 
 
 class WidgetInfo(NamedTuple):
@@ -44,33 +40,33 @@ class Window(QMainWindow):
 
         self.widgets = {}  # type: Dict[str, WidgetInfo]
 
-        self.file_menu = QMenu('&File', self)
+        self.file_menu = QMenu("&File", self)
         self.menuBar().addMenu(self.file_menu)
 
-        self.layout_menu = QMenu('&Layout', self)
+        self.layout_menu = QMenu("&Layout", self)
         self.menuBar().addMenu(self.layout_menu)
-        self.save_layout_action = self.layout_menu.addAction('&Save', state_manager.save_as_last, Qt.CTRL + Qt.Key_S)
+        self.save_layout_action = self.layout_menu.addAction("&Save", state_manager.save_as_last, Qt.CTRL + Qt.Key_S)
         self.save_layout_action.setEnabled(state_manager.has_last())
 
-        self.restore_layout_action = self.layout_menu.addAction('Restore &last', state_manager.restore_last)
+        self.restore_layout_action = self.layout_menu.addAction("Restore &last", state_manager.restore_last)
         self.restore_layout_action.setEnabled(state_manager.has_last())
 
         self.restore_layout_def_action = None
         self.save_layout_def_action = None
 
         if state_manager.has_factory_default():
-            self.restore_layout_def_action = self.layout_menu.addAction('Restore &default',
-                                                                        state_manager.restore_default)
+            self.restore_layout_def_action = self.layout_menu.addAction(
+                "Restore &default", state_manager.restore_default
+            )
 
         if state_manager.has_factory_default(check_writtable=True):
-            self.save_layout_def_action = self.layout_menu.addAction('Save as default',
-                                                                     state_manager.save_as_default)
+            self.save_layout_def_action = self.layout_menu.addAction("Save as default", state_manager.save_as_default)
 
         # self.add_menu = QMenu('&Add widget', self)
         # self.menuBar().addSeparator()
         # self.menuBar().addMenu(self.add_menu)
 
-        self.remove_menu = QMenu('&Remove widget', self)
+        self.remove_menu = QMenu("&Remove widget", self)
         self.menuBar().addMenu(self.remove_menu)
 
         self.close_callback = None
@@ -106,15 +102,13 @@ class Window(QMainWindow):
                 logging.exception("ignoring exception during serialization of {}".format(i.dock_widget.windowTitle()))
 
         return dict(
-            geometry=bytes(self.saveGeometry()).hex(),
-            state=bytes(self.saveState()).hex(),
-            widgets=widgets_state
+            geometry=bytes(self.saveGeometry()).hex(), state=bytes(self.saveState()).hex(), widgets=widgets_state
         )
 
     def restore_state(self, window_state: DumpedState):
         try:
             self.loaded_state = window_state
-            self.loaded_widgets_state = window_state['widgets']
+            self.loaded_widgets_state = window_state["widgets"]
 
             for widget_name, (widget_title, widget_state) in self.loaded_widgets_state.items():
                 if widget_name not in self.widgets:
@@ -123,14 +117,18 @@ class Window(QMainWindow):
                 else:
                     self.widgets[widget_name].restore_state(widget_state)
 
-            self.restoreGeometry(bytes.fromhex(window_state['geometry']))
-            self.restoreState(bytes.fromhex(window_state['state']))
+            self.restoreGeometry(bytes.fromhex(window_state["geometry"]))
+            self.restoreState(bytes.fromhex(window_state["state"]))
         except Exception:
             logging.exception("exception during reading state file; ignoring")
 
     # FIXME: refactor: add, remove, replace
-    def add(self, widget: QWidget, dump_state: DumpStateFunction = lambda: dict(),
-            restore_state: RestoreStateFunction = lambda b: None):
+    def add(
+        self,
+        widget: QWidget,
+        dump_state: DumpStateFunction = lambda: dict(),
+        restore_state: RestoreStateFunction = lambda b: None,
+    ):
         name = widget.objectName()
         assert name
         title = widget.windowTitle() or name
@@ -155,9 +153,15 @@ class Window(QMainWindow):
         def remove_widget():
             self.remove_widget(name)
 
-        wi = WidgetInfo(widget=widget, name=name, title=title, dock_widget=dock_widget,
-                        dump_state=dump_state, restore_state=restore_state,
-                        remove_action=self.remove_menu.addAction(title, remove_widget))
+        wi = WidgetInfo(
+            widget=widget,
+            name=name,
+            title=title,
+            dock_widget=dock_widget,
+            dump_state=dump_state,
+            restore_state=restore_state,
+            remove_action=self.remove_menu.addAction(title, remove_widget),
+        )
         self.widgets[name] = wi
 
         def title_changed(new_title):
