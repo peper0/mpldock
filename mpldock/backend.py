@@ -1,15 +1,15 @@
 import logging
 
-from PyQt5 import QtWidgets
-from matplotlib.backend_bases import FigureManagerBase, _Backend
+from matplotlib.backend_bases import FigureManagerBase
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
+from matplotlib.figure import Figure
 
-from mpldock import add_dock, window, run
-from mpldock.figure import FigureCanvas, MplFigure
+from mpldock import add_dock, window
+from mpldock.figure import MplFigure
 
 
 class FigureManagerQTDock(FigureManagerBase):
-    def __init__(self, canvas: FigureCanvas, num):
+    def __init__(self, canvas: FigureCanvasQTAgg, num):
         self.widget = MplFigure(canvas)
         self.name = f"MplFigure__{num}"
         self.widget.setObjectName(self.name)
@@ -19,7 +19,7 @@ class FigureManagerQTDock(FigureManagerBase):
 
     def destroy(self, *args):
         # Not sure what should we do here
-        self.window.remove_widget(self.name)
+        pass
 
     def get_window_title(self):
         return self.widget.windowTitle()
@@ -36,17 +36,20 @@ class FigureManagerQTDock(FigureManagerBase):
         self.window.raise_()
 
 
-@_Backend.export
-class _BackendQTDock(_Backend):
+# This class is an entry point to the backend. It's methods are called by matplotlib if the current module is used as a backend.
+class FigureCanvas(FigureCanvasQTAgg):
     required_interactive_framework = "qt5"
     FigureCanvas = FigureCanvasQTAgg
     FigureManager = FigureManagerQTDock
 
-    @staticmethod
-    def trigger_manager_draw(manager):
-        manager.canvas.draw_idle()
+    def __init__(self, figure: Figure):
+        super().__init__(figure)
+        self.figure = figure
 
-    @staticmethod
-    def mainloop():
-        run()
-
+    @classmethod
+    def new_manager(cls, figure, num):
+        canvas = FigureCanvas(figure)
+        manager = FigureManagerQTDock(canvas, num)
+        canvas.manager = manager
+        figure.canvas = canvas
+        return manager

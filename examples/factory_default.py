@@ -3,10 +3,9 @@ import os.path
 import matplotlib
 
 from mpldock import persist_layout
-
-matplotlib.use('module://mpldock.backend')
-
 import matplotlib.pyplot as plt
+
+matplotlib.use('module://mpldock')
 
 persist_layout('1e2682b5-4408-42a6-ae97-3290153294', os.path.join(os.path.dirname(os.path.realpath(__file__)), 'fd_layout.json'))
 

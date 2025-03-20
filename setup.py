@@ -7,8 +7,8 @@ with open("README.md") as fh:
 
 setup(
     name='mpldock',
-    version='0.1',
-    description='Dock matplotlib figures and other widgets.',
+    version='0.2',
+    description='Dock matplotlib figures and other widgets. Preserve layout between sessions.',
     long_description=long_description,
     long_description_content_type='text/markdown',
     license='MIT',

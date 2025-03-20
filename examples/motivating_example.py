@@ -10,7 +10,7 @@ USE_MPLDOCK = True
 script_dir = os.path.dirname(os.path.realpath(__file__))
 
 if USE_MPLDOCK:
-    plt.switch_backend('module://mpldock.backend')
+    plt.switch_backend('module://mpldock')
     persist_layout('1e2682b5-4408-42a6-ae97-23416178192', os.path.join(script_dir, 'me_layout.json'))
     window("Gradient analysis")
 

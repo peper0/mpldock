@@ -25,7 +25,7 @@ The simplest example with layout persistence:
 import matplotlib.pyplot as plt
 from mpldock import persist_layout
 
-plt.switch_backend('module://mpldock.backend')
+plt.use('module://mpldock')  # may use also "backend" in matplotlibrc or MPLBACKEND env var
 persist_layout('1e2682b5-4408-42a6-ae97-3c11332a96fa')
 
 plt.figure("some plot")
@@ -61,7 +61,7 @@ plt.show()
 ```
 at the end of script, which starts a mainloop and blocks until the application is finished.
 
-In an ipython or jupyter a `gui` magic may be used:
+In an ipython or jupyter usually integration with qt is automatic, but in some versions or configurations you may need to activate it manually:
 ```
 %gui qt5
 ```

@@ -3,3 +3,5 @@ from mpldock.common import named
 from . import tweaks, backend
 
 __all__ = ["window", "add_dock", "tweaks", "backend", "run", "persist_layout"]
+
+FigureCanvas = backend.FigureCanvas
